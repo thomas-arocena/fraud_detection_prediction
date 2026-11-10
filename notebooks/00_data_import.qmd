@@ -1,8 +1,9 @@
 ---
-title: "Data import and tidying"
+title: "Data import"
 format: html
+execute: 
+  eval: false
 ---
-
 
 ::: {.callout-caution}
 # Draft
@@ -10,5 +11,94 @@ format: html
 This is a draft website
 :::
 
+```{r}
+#| label: setup
+library("readr")
+library("janitor")
+library("dplyr")
+```
 
-# 0 - Empty Title
+# Data Import 
+
+The original CSV files are stored locally in the data-raw/ directory.
+
+These files are relatively large, so they are deliberately excluded from Git version control to avoid unnecessarily increasing repository size.
+
+They can be downloaded directly from the Kaggle competition page [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection/data).
+
+```{r}
+#| label: import-data
+test_identity <- read_csv("data-raw/test_identity.csv")
+test_transaction <- read_csv("data-raw/test_transaction.csv")
+train_identity <- read_csv("data-raw/train_identity.csv")
+train_transaction <- read_csv("data-raw/train_transaction.csv")
+```
+
+```{r}
+#| label: dataset-dimensions
+dataset_dimensions <- tibble(
+  dataset = c("train_transaction", "train_identity", "test_transaction", "test_identity"),
+  observations = c(nrow(train_transaction), nrow(train_identity), nrow(test_transaction), nrow(test_identity)),
+  variables = c(ncol(train_transaction), ncol(train_identity), ncol(test_transaction), ncol(test_identity))
+  )
+
+knitr::kable(
+  dataset_dimensions,
+  caption = "Dimensions of the four original datasets"
+)
+```
+
+Table: Dimensions of the four original datasets
+
+|dataset            | observations| variables|
+|:------------------|------------:|---------:|
+|Train transactions |       590540|       394|
+|Train identity     |       144233|        41|
+|Test transactions  |       506691|       393|
+|Test identity      |       141907|        41|
+
+
+To improve consistency and simplify subsequent data manipulation, all column names are standardised using `janitor::clean_names()`.
+
+This transformation converts variable names to a consistent snake_case format.
+
+```{r}
+#| label: clean-column-names
+test_identity <- janitor::clean_names(test_identity)
+test_transaction <- janitor::clean_names(test_transaction)
+train_identity <- janitor::clean_names(train_identity)
+train_transaction <- janitor::clean_names(train_transaction)
+```
+
+# Join on `TransactionID`
+
+We want to predict `is_fraud` variable available on the transaction datasets.
+
+The transaction datasets contain the main observations, while identity information is only available for a subset of transactions.
+
+Our objective is to retain every transaction, regardless of whether identity information is available.
+
+We therefore perform a left join using `transaction_id` as the matching key.
+
+```{r}
+#| label: join-data
+train <- left_join(
+    train_transaction, 
+    train_identity,
+    by = join_by("transaction_id" == "transaction_id")
+    )
+
+test <- left_join(
+    test_transaction,
+    test_identity, 
+    by = join_by("transaction_id" == "transaction_id")
+    )
+```
+
+# Export processed data
+
+```{r}
+#| label: export-data
+write_csv(test, "data-processed/test.csv")
+write_csv(train, "data-processed/train.csv")
+```
