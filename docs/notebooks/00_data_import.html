@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Data import and tidying</title>
+<title>Data import</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -95,7 +130,15 @@ ul.task-list li input[type="checkbox"] {
   </li>  
   <li class="nav-item">
     <a class="nav-link active" href="../notebooks/00_data_import.html" aria-current="page"> 
-<span class="menu-text">Data import and tidying</span></a>
+<span class="menu-text">Data import</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../notebooks/01_fraudulent_client.html"> 
+<span class="menu-text">Fraudulent Clients</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../notebooks/02_PCA.html"> 
+<span class="menu-text">PCA</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -114,7 +157,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Data import and tidying</h1>
+<h1 class="title">Data import</h1>
 </div>
 
 
@@ -144,8 +187,101 @@ ul.task-list li input[type="checkbox"] {
 <p>This is a draft website</p>
 </div>
 </div>
-<section id="empty-title" class="level1">
-<h1>0 - Empty Title</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"readr"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"janitor"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"dplyr"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="data-import" class="level1">
+<h1>Data Import</h1>
+<p>The original CSV files are stored locally in the data-raw/ directory.</p>
+<p>These files are relatively large, so they are deliberately excluded from Git version control to avoid unnecessarily increasing repository size.</p>
+<p>They can be downloaded directly from the Kaggle competition page <a href="https://www.kaggle.com/competitions/ieee-fraud-detection/data">IEEE-CIS Fraud Detection</a>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>test_identity <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data-raw/test_identity.csv"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>test_transaction <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data-raw/test_transaction.csv"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>train_identity <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data-raw/train_identity.csv"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>train_transaction <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data-raw/train_transaction.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset_dimensions <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">dataset =</span> <span class="fu">c</span>(<span class="st">"train_transaction"</span>, <span class="st">"train_identity"</span>, <span class="st">"test_transaction"</span>, <span class="st">"test_identity"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">observations =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(train_transaction), <span class="fu">nrow</span>(train_identity), <span class="fu">nrow</span>(test_transaction), <span class="fu">nrow</span>(test_identity)),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">c</span>(<span class="fu">ncol</span>(train_transaction), <span class="fu">ncol</span>(train_identity), <span class="fu">ncol</span>(test_transaction), <span class="fu">ncol</span>(test_identity))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  dataset_dimensions,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Dimensions of the four original datasets"</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<table class="caption-top table">
+<caption>Dimensions of the four original datasets</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">dataset</th>
+<th style="text-align: right;">observations</th>
+<th style="text-align: right;">variables</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Train transactions</td>
+<td style="text-align: right;">590540</td>
+<td style="text-align: right;">394</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Train identity</td>
+<td style="text-align: right;">144233</td>
+<td style="text-align: right;">41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Test transactions</td>
+<td style="text-align: right;">506691</td>
+<td style="text-align: right;">393</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Test identity</td>
+<td style="text-align: right;">141907</td>
+<td style="text-align: right;">41</td>
+</tr>
+</tbody>
+</table>
+<p>To improve consistency and simplify subsequent data manipulation, all column names are standardised using <code>janitor::clean_names()</code>.</p>
+<p>This transformation converts variable names to a consistent snake_case format.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>test_identity <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(test_identity)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>test_transaction <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(test_transaction)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>train_identity <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(train_identity)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>train_transaction <span class="ot">&lt;-</span> janitor<span class="sc">::</span><span class="fu">clean_names</span>(train_transaction)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="join-on-transactionid" class="level1">
+<h1>Join on <code>TransactionID</code></h1>
+<p>We want to predict <code>is_fraud</code> variable available on the transaction datasets.</p>
+<p>The transaction datasets contain the main observations, while identity information is only available for a subset of transactions.</p>
+<p>Our objective is to retain every transaction, regardless of whether identity information is available.</p>
+<p>We therefore perform a left join using <code>transaction_id</code> as the matching key.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    train_transaction, </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    train_identity,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">join_by</span>(<span class="st">"transaction_id"</span> <span class="sc">==</span> <span class="st">"transaction_id"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    test_transaction,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    test_identity, </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">join_by</span>(<span class="st">"transaction_id"</span> <span class="sc">==</span> <span class="st">"transaction_id"</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="export-processed-data" class="level1">
+<h1>Export processed data</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(test, <span class="st">"data-processed/test.csv"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(train, <span class="st">"data-processed/train.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 
 
 </section>
