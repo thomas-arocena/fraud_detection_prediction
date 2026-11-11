@@ -1,0 +1,43 @@
+---
+title: "Fraudulent Clients"
+format: html
+execute: 
+  eval: false
+---
+
+As discussed in the [Kaggle discussion](https://www.kaggle.com/c/ieee-fraud-detection/discussion/101203#589276) and highlighted in the [first-place solution](https://www.kaggle.com/competitions/ieee-fraud-detection/writeups/fraudsquad-1st-place-solution-part-2), fraudulent activity may not be determined solely by the characteristics of an individual transaction. Instead, fraud patterns can also be related to the historical transaction behaviour of a given cardholder.
+
+We therefore attempt to construct a proxy user identifier (`uid`) by combining several card-related attributes and the purchaser's email domain. We then aggregate the numerical variables within each group by calculating their means. This provides a user-level representation of the transaction data.
+
+```{r}
+#| label: unique-uid
+train_by_uid <- train |> 
+    mutate(uid = paste0(
+       card1,
+       card2,
+       card3,
+       card4,
+       card5,
+       card6,
+       p_emaildomain
+    )) |> 
+    group_by(uid) |> 
+    select(where(is.numeric), uid) |> 
+    summarise(across(everything(), mean)) |> 
+    select(-c(transaction_id, transaction_dt))
+```
+
+Finally, we remove variables used to construct the identifier, as well as other potentially identifying attributes, to obtain a more compact user-level dataset.
+
+```{r}
+#| label: remove-unwanted-variables
+train_by_uid <- train_by_uid |> 
+    select(-starts_with("card")) |> 
+    select(-starts_with("addr")) |> 
+    select(-starts_with("dist"))
+```
+
+```{r}
+#| label: write-train-by-uid
+write_csv(train_by_uid, file = "data-processed/train_by_uid.csv")
+```

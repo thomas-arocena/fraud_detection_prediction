@@ -1,0 +1,122 @@
+---
+title: "PCA"
+format: html
+execute: 
+  eval: false
+---
+
+
+```{r}
+library("FactoMineR")
+```
+
+
+```{r}
+train_uid <- read_csv("data-processed/train_by_uid.csv")
+train_uid_pca <- train_uid |> 
+    select(-c(uid, is_fraud))
+```
+
+
+```{r}
+uid_pca <- PCA(train_uid_pca)
+```
+
+Call:
+PCA(X = train_uid_pca) 
+
+Eigenvalues
+                      Dim.1  Dim.2  Dim.3  Dim.4  Dim.5
+Variance             36.891 29.760 21.878 21.061 16.023
+% of var.             9.411  7.592  5.581  5.373  4.088
+Cumulative % of var.  9.411 17.003 22.584 27.957 32.044
+
+```{r}
+pca_contrib <- uid_pca$var$contrib  |> as_tibble(rownames = "feature")
+contrib_1 <- pca_contrib  |> select(feature, Dim.1)  |> arrange(desc(abs(Dim.1)))  |> head(5)
+contrib_2 <- pca_contrib  |> select(feature, Dim.2)  |> arrange(desc(abs(Dim.2)))  |> head(5)
+contrib_3 <- pca_contrib  |> select(feature, Dim.3)  |> arrange(desc(abs(Dim.3)))  |> head(5)
+contrib_4 <- pca_contrib  |> select(feature, Dim.4)  |> arrange(desc(abs(Dim.4)))  |> head(5)
+contrib_5 <- pca_contrib  |> select(feature, Dim.5)  |> arrange(desc(abs(Dim.5)))  |> head(5)
+```
+
+```{r}
+knitr::kable(
+  contrib_1,
+  caption = "Highest contributions to Dimension 1"
+)
+
+knitr::kable(
+  contrib_2,
+  caption = "Highest contributions to Dimension 2"
+)
+
+knitr::kable(
+  contrib_3,
+  caption = "Highest contributions to Dimension 3"
+)
+
+knitr::kable(
+  contrib_4,
+  caption = "Highest contributions to Dimension 4"
+)
+
+knitr::kable(
+  contrib_5,
+  caption = "Highest contributions to Dimension 4"
+)
+```
+
+Table: Highest contributions to Dimension 1
+
+|feature |    Dim.1|
+|:-------|--------:|
+|v92     | 2.305568|
+|v71     | 2.286790|
+|v93     | 2.285377|
+|v79     | 2.279788|
+|v72     | 2.270597|
+
+
+Table: Highest contributions to Dimension 2
+
+|feature |    Dim.2|
+|:-------|--------:|
+|v219    | 1.560774|
+|v217    | 1.361130|
+|v258    | 1.348681|
+|v265    | 1.336754|
+|v202    | 1.325411|
+
+
+Table: Highest contributions to Dimension 3
+
+|feature |    Dim.3|
+|:-------|--------:|
+|v243    | 1.964064|
+|v229    | 1.930647|
+|v218    | 1.884281|
+|v254    | 1.871838|
+|v249    | 1.849883|
+
+
+Table: Highest contributions to Dimension 4
+
+|feature |    Dim.4|
+|:-------|--------:|
+|v128    | 2.526634|
+|v127    | 2.429724|
+|v308    | 2.361940|
+|v126    | 2.317755|
+|v306    | 2.273951|
+
+
+Table: Highest contributions to Dimension 4
+
+|feature |    Dim.5|
+|:-------|--------:|
+|v157    | 2.786476|
+|v158    | 2.770370|
+|v155    | 2.665643|
+|v156    | 2.625572|
+|v148    | 2.610682|

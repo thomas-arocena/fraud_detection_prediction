@@ -10,3 +10,5 @@ website:
       - text: "Home"
         href: index.qmd
       - notebooks\00_data_import.qmd
+      - notebooks\01_fraudulent_client.qmd
+      - notebooks\02_PCA.qmd
