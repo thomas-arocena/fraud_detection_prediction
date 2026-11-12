@@ -1,0 +1,118 @@
+---
+title: "Elastic net"
+format: html
+execute: 
+  eval: false
+---
+
+```{r}
+#| label: setup
+set.seed(12112026)
+library("tidymodels")
+library("tidyverse")
+```
+
+```{r}
+# | label: import-data
+data <- read_csv("data-processed/train_by_uid.csv")
+```
+
+inspired by [Tidymodels case-study](https://www.tidymodels.org/start/case-study/).
+
+```{r}
+#| label: split
+splits <- initial_validation_split(
+    data, prop = c(0.60, 0.15))
+
+data_train <- training(splits)
+data_val   <- validation(splits)
+data_test  <- testing(splits)
+data_other <- bind_rows(data_train, data_val)
+
+val_set <- validation_set(splits)
+```
+```{r}
+#| label: lm-recipe
+lm_rec <- 
+    recipe(is_fraud ~ ., data = data_other) |> 
+    update_role(uid, new_role = "id variable") |>
+    step_zv(all_predictors()) |> 
+    step_impute_mean(all_predictors())
+```
+
+```{r}
+#| label: untuned-model
+lm_mod <- 
+    linear_reg(penalty = tune(), mixture = tune()) |> 
+    set_engine("glmnet")
+```
+
+```{r}
+#| label: workflow
+lm_workflow <- 
+  workflow() |> 
+  add_model(lm_mod) |> 
+  add_recipe(lm_rec)
+```
+
+```{r}
+#| label: tuning-grid
+params_list <- list(
+  penalty = 10^seq(-4, -1, length.out = 30),
+  mixture = 10^seq(-4, -1, length.out = 30)
+)
+lm_reg_grid <- 
+  params_list |> 
+  expand.grid() |> 
+  as_tibble()
+```
+
+```{r}
+#| label: params-tuning
+lm_res <- 
+  lm_workflow |> 
+  tune_grid(
+    val_set,
+    grid = lm_reg_grid,
+    control = control_grid(save_pred = TRUE),
+    metrics = metric_set(rmse))
+```
+
+```{r}
+#| label: top-models
+top_models <-
+  lm_res |> 
+  show_best(metric = "rmse", n = 15) |> 
+  arrange(penalty) 
+top_models
+
+best_model <- select_best(lm_res, metric = "rmse")
+```
+
+```{r}
+#| label: last-model
+# Last model
+last_lm_mod <- 
+  linear_reg(
+    penalty = best_model$penalty,
+    mixture = best_model$mixture) |> 
+  set_engine("glmnet")
+
+# the last workflow
+last_workflow <- 
+  lm_workflow |> 
+  update_model(last_lm_mod)
+
+last_res <- 
+  last_workflow |> 
+  last_fit(splits)
+
+last_res |> collect_metrics() |> knitr::kable(caption = "Metrics of elastic net")
+```
+
+Table: Metrics of elastic net
+
+|.metric |.estimator | .estimate|.config         |
+|:-------|:----------|---------:|:---------------|
+|rmse    |standard   | 0.1272448|pre0_mod0_post0 |
+|rsq     |standard   | 0.1877370|pre0_mod0_post0 |
